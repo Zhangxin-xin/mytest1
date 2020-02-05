@@ -1,0 +1,414 @@
+查询员工所对应的部门名称
+select ename,dname
+from emp join dept
+on emp.deptno = dept.deptno
+
+*查询员工薪水所对应的薪水等级
+select ename,sal,grade
+from emp join salgrade
+on emp.sal>losal and emp.sal<hisal
+
+*查询出员工所对应的领导名称
+select e1.ename,e2.ename
+from emp as e1 join emp as e2
+on e1.mgr = e2.empno
+
+*查询出员工所对应的领导名称,显示所有员工信息
+select e1.ename,e2.ename as leader 
+from emp as e1 left join emp as e2
+on e1.mgr = e2.empno
+
+*查询员工所对应的部门名称，要求显示所有部门
+select ename,dname
+from emp right join dept
+on emp.deptno = dept.deptno
+
+*查询员工所对应的部门名称，要求显示所有员工
+select ename,dname
+from emp left join dept
+on emp.deptno = dept.deptno
+
+*查询出员工的部门名称，员工的领导名称和薪水等级
+select e1.ename,e2.ename laeder,dname,grade
+from emp as e1 join emp as e2
+on e1.mgr = e2.empno
+join dept
+on e1.deptno = dept.deptno
+join salgrade
+on e1.sal between losal and hisal
+
+1.找出薪水比公司平均薪水高的员工，要求显示员工名和薪水
+select ename,sal
+from emp
+where sal>(select avg(sal)
+from emp)
+
+select ename,sal
+from emp join (select avg(sal) a_sal
+from emp) t
+where sal>a_sal
+
+2.找出每个部门的平均薪水，并且要求显示平均薪水的薪水等级
+select avg(sal)
+from emp
+group by deptno
+
+select t.a_sal,grade
+from salgrade join (select avg(sal) a_sal
+from emp
+group by deptno) t
+on t.a_sal between losal and hisal
+
+3.查询员工信息，查询哪些人是管理者，要求显示出其员工编号和员工姓名
+select e2.empno,e2.ename
+from emp as e1 join emp as e2
+on e1.mgr = e2.empno
+
+查询出薪水大于任一部门的平均薪水的员工信息
+select *
+from emp
+where sal > any(select avg(sal)
+from emp
+group by deptno)
+
+查询所有学生的Sname、Cno和Degree列。
+select Student.sname,Score.cno,Score.degree
+from Student join Score 
+on Student.sno = Score.sno
+  
+查询“95033”班学生的平均分。
+select sno
+from student
+where class='95033'
+
+select cno,avg(degree)
+from student s join score sc
+on s.sno = sc.sno
+where class='95033'
+group by cno
+
+假设使用如下命令建立了一个grade表：    
+create table grade(
+loe int(3),
+upp int(3),
+rank char(1)
+);
+
+select *from grade
+
+insert into grade values(90,100,'A');
+insert into grade values(80,89,'B');
+insert into grade values(70,79,'C');
+insert into grade values(60,69,'D');
+insert into grade values(0,59,'E');
+
+查询所有同学的Sno、Cno和rank列。
+select Student.Sno,Score.cno,grade.rank
+from Student join Score 
+on Student.sno = Score.sno
+join grade
+on Score.degree between loe and upp
+
+向学生表中插入一条记录
+insert into student values('102','小华','男','1978-09-01','95033');
+
+select * from student
+
+将成绩表中学号为101的学生成绩改为98
+select * from Score
+update Score set degree = '98' where sno = '101';
+
+查询选修“3-105”课程的成绩高于“109”号同学成绩的所有同学的记录。  
+select degree
+from score 
+where sno = '109' and cno = '3-105'
+
+select score.*
+from score join (select degree
+from score 
+where sno = '109' and cno = '3-105') t
+on t.degree < score.degree 
+where cno = '3-105'
+
+//子查询
+查询和学号为108的同学同年出生的所有学生的Sno、Sname和Sbirthday列。
+
+select year(sbirthday)
+from student
+where sno="108"
+
+select sno,sname,sbirthday
+from student 
+where year(sbirthday)=(select year(sbirthday)
+from student
+where sno="108")
+
+查询“张旭“教师任课的学生成绩。
+select tno
+from teacher
+where tname="张旭" 
+
+select c.cno
+from course c join teacher t
+on t.tno=c.tno
+where t.tname="张旭" 
+
+select s.*
+from score s join course c
+on s.cno = c.cno
+join teacher t
+on t.tno=c.tno
+where t.tname="张旭" 
+
+
+查询选修某课程的同学人数多于5人的教师姓名。
+select cno,count(*) c
+from score
+group by cno
+having c>5
+
+select tname
+from course c join (select cno,count(*) c
+from score
+group by cno
+having c>5) t
+on c.cno in(t.cno)
+join teacher t 
+on c.tno = t.tno
+  
+查询存在有85分以上成绩的课程Cno.
+select distinct cno
+from score 
+where degree > '85'
+
+查询出“计算机系“教师所教课程的成绩表。
+select *
+from score 
+where cno in (select c.cno
+from teacher t join course c
+on t.tno=c.tno
+where depart="计算机系")
+
+查询选修编号为“3-105“课程且成绩至少高于选修编号为“3-245”的同学的
+sno、Cno、和Degree,并按Degree从高到低次序排序。
+
+select degree
+from score 
+where cno = '3-245'
+
+
+select * 
+from score 
+where cno = '3-105' and degree>any(select degree
+from score 
+where cno = '3-245')
+order by Degree desc;
+
+24、查询选修编号为“3-105”且成绩高于选修编号为“3-245”课程的同学的Cno、Sno和Degree. 
+select degree
+from score 
+where cno = '3-245'
+
+select * 
+from score 
+where cno = '3-105' and degree>all(select degree
+from score 
+where cno = '3-245') 
+
+28. 查询成绩比该课程平均成绩低的同学的成绩表。 
+select cno,avg(degree) 
+from score group by cno
+
+select s.*
+from score s join (select cno,avg(degree) a_degree
+from score 
+group by cno) s2
+on s.cno=s2.cno
+where s.degree<s2.a_degree
+
+29.查询所有任课教师的Tname和Depart.
+select distinct t.tname,t.depart
+from teacher t join course c
+on t.tno=c.tno
+join score s
+on s.cno=c.cno
+
+
+30 .查询所有未讲课的教师的Tname和Depart.
+select distinct cno
+from score
+
+select t.tname,t.depart
+from teacher t join course c
+on t.tno=c.tno
+where c.cno not in(select distinct cno
+from score)
+
+31.查询至少有2名男生的班号。
+select class,count(*) c
+from student
+where ssex='男'
+group by class
+having c>=2
+
+/*33.查询Student表中每个学生的姓名和年龄。*/
+select sname,year(now())-year(Sbirthday) age
+from student
+
+34.查询Student表中最大和最小的Sbirthday日期值。
+select min(Sbirthday),max(Sbirthday)
+from student
+
+36.查询“男”教师及其所上的课程。
+select tname,cname
+from teacher t join course c
+on t.tno=c.tno
+where t.tsex='男'
+
+38.查询和“李军”同性别并同班的同学Sname.
+select ssex,class
+from student
+where sname='李军'
+
+select sname
+from student s join (select ssex,class
+from student
+where sname='李军') s1
+where s.ssex=s1.ssex and s.class=s1.class
+
+39.查询所有选修“计算机导论”课程的“男”同学的成绩表。
+select sc.*
+from score sc join student st
+on sc.sno=st.sno
+join course c
+on c.cno=sc.cno
+where st.ssex='男' and c.cname="计算机导论"
+
+select 'a xword a' regexp '[[:<:]]word[[:>:]]'
+
+
+
+
+*创建一个存储过程，用来显示员工的部门名称
+select e.ename,d.dname
+from dept d join emp e
+on d.deptno=e.deptno
+
+create procedure pro()
+begin
+select e.ename,d.dname
+from dept d join emp e
+on d.deptno=e.deptno;
+end;
+
+call pro
+
+*创建一个返回部门最高薪水，最低薪水和平均薪水的存储过程
+set @maxsal=0;
+set @minsal=0;
+set @avgsal=0;
+
+drop procedure if exists pro;
+create procedure pro(out ma int,out mi int,out av int)
+begin
+select max(sal) as max_sal ,min(sal) min_sal,avg(sal) a_sal
+from emp 
+group by deptno;
+end;
+call pro(@maxsal,@minsal,@avgsal);
+
+drop procedure if exists pro;
+create procedure pro(out ma int,out mi int,out av int)
+begin
+select max(sal) into ma from emp;
+select min(sal) into mi from emp;
+select avg(sal) into av from emp;
+end;
+call pro(@maxsal,@minsal,@avgsal)
+select @maxsal,@minsal,@avgsal;
+
+
+*创建一个存储过程，实现传入学生学号，返回学生总成绩的功能
+select sno,sum(degree) sum_de
+from score
+where sno ='101'
+group by sno
+
+drop procedure if exists pro3;
+create procedure pro3(in s_sno int)
+begin
+select sum(degree) sum_de
+from score
+where sno =s_sno;
+end;
+call pro3('103')
+
+set @avgsal=103;
+drop procedure if exists pro;
+create procedure pro(in s_sno int)
+begin
+select sum(degree) from score where sno=s_sno;
+end;
+call pro(@avgsal)
+
+*创建一个存储过程，传入三个参数，第一个参数 为员工编号，
+第二个参数为1/0（1代表涨工资，0代表不涨工资），
+第三个参数为最新的工资。(
+要求定义一个double类型的变量指定默认 增长率为2)
+set @newsal = 0;
+drop procedure if exists pro;
+create procedure pro3(in eno int,in flag boolean,inout new_sal double(6,2))
+begin
+declare rate double(2,1) default 2;
+if flag=1
+then update emp set sal = sal*rate where empno = eno;
+select sal into new_sal from emp where empno = eno;
+end if;
+end;
+
+call pro3(7396,1,@newsal);
+select @newsal;
+
+用存储过程，实现求1-n的和（三种方法）
+drop procedure if exists pro;
+create procedure pro(in n int)
+begin
+declare i int default 1;
+declare s int default 0;
+while i<=n
+do
+set s = s+i;
+set i = i+1;
+end while;
+select s;
+end;
+call pro(100)
+
+drop procedure if exists pro;
+create procedure pro(in n int)
+begin
+declare i int default 1;
+declare s int default 0;
+repeat
+set s = s+i;
+set i = i+1;
+until i>n
+end repeat;
+select s;
+end;
+call pro(100)
+
+drop procedure if exists pro;
+create procedure pro(in n int)
+begin
+declare i int default 1;
+declare s int default 0;
+myloop:loop
+set s = s+i;
+set i = i+1;
+if i>n then leave myloop;
+end if;
+end loop myloop;
+select s;
+end;
+call pro(100)
